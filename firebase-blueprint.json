@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "Member": {
+      "title": "Member",
+      "description": "A member of the mess",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "roomNo": { "type": "string" },
+        "joinDate": { "type": "string" },
+        "isManager": { "type": "boolean" },
+        "freeMeals": { "type": "number" }
+      },
+      "required": ["name", "joinDate", "isManager"]
+    },
+    "MealLog": {
+      "title": "MealLog",
+      "description": "Daily meal log for a member",
+      "type": "object",
+      "properties": {
+        "morning": { "type": "boolean" },
+        "lunch": { "type": "boolean" },
+        "dinner": { "type": "boolean" }
+      },
+      "required": ["morning", "lunch", "dinner"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Expense logged for the mess",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["date", "amount", "description", "category"]
+    },
+    "Config": {
+      "title": "Config",
+      "description": "System-wide configuration",
+      "type": "object",
+      "properties": {
+        "mealRate": { "type": "number" },
+        "ingredientRatios": { "type": "string" }
+      },
+      "required": ["mealRate", "ingredientRatios"]
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "A deposit made by a user for a specific month",
+      "type": "object",
+      "properties": {
+        "memberId": { "type": "number" },
+        "month": { "type": "string" },
+        "amount": { "type": "number" }
+      },
+      "required": ["memberId", "month", "amount"]
+    }
+  },
+  "firestore": {
+    "members/{memberId}": {
+      "schema": { "$ref": "#/entities/Member" },
+      "description": "Stores all mess members"
+    },
+    "mealLogs/{dateStr}/memberLogs/{memberId}": {
+      "schema": { "$ref": "#/entities/MealLog" },
+      "description": "Stores individual member meal status per date"
+    },
+    "expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Stores all mess expenses"
+    },
+    "config/main": {
+      "schema": { "$ref": "#/entities/Config" },
+      "description": "Global mess configuration"
+    },
+    "deposits/{depositId}": {
+      "schema": { "$ref": "#/entities/Deposit" },
+      "description": "Stores member deposits per month"
+    }
+  }
+}

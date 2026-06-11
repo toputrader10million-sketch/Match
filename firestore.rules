@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.email == "toputrader10million@gmail.com"; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidMember(data) {
+      return data.keys().hasAll(['name', 'joinDate', 'isManager']) &&
+             data.name is string && data.name.size() <= 200 &&
+             data.joinDate is string && data.joinDate.size() <= 20 &&
+             data.isManager is bool &&
+             (!data.keys().hasAny(['userId']) || data.userId is string) &&
+             (!data.keys().hasAny(['roomNo']) || data.roomNo is string && data.roomNo.size() <= 50) &&
+             (!data.keys().hasAny(['freeMeals']) || data.freeMeals is number);
+    }
+
+    match /members/{memberId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(memberId) && isValidMember(incoming());
+      allow update: if isSignedIn() && isValidId(memberId) && isValidMember(incoming());
+      allow delete: if isSignedIn();
+    }
+
+    function isValidMealLog(data) {
+      return data.keys().hasAll(['slots']) && data.slots is map;
+    }
+
+    match /mealLogs/{dateStr} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(dateStr) && isValidMealLog(incoming());
+      allow update: if isSignedIn() && isValidId(dateStr) && isValidMealLog(incoming());
+      allow delete: if isSignedIn();
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['date', 'amount', 'description', 'category']) &&
+             data.date is string && data.date.size() <= 20 &&
+             data.amount is number &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.category is string && data.category.size() <= 100;
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(expenseId) && isValidExpense(incoming());
+      allow update: if isSignedIn() && isValidId(expenseId) && isValidExpense(incoming());
+      allow delete: if isSignedIn();
+    }
+
+    function isValidConfig(data) {
+      return data.keys().hasAll(['mealRate', 'ingredientRatios']) &&
+             data.mealRate is number &&
+             data.ingredientRatios is string && data.ingredientRatios.size() <= 5000;
+    }
+
+    match /config/{configId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidConfig(incoming());
+      allow update: if isSignedIn() && isValidConfig(incoming());
+      allow delete: if isAdmin();
+    }
+
+    function isValidDeposit(data) {
+      return data.keys().hasAll(['memberId', 'month', 'amount']) &&
+             data.memberId is number &&
+             data.month is string && data.month.size() <= 10 &&
+             data.amount is number;
+    }
+
+    match /appData/{messId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}
